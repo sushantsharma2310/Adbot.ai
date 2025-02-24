@@ -4,14 +4,13 @@ import { motion } from 'framer-motion';
 import {
   FiImage, FiType, FiSquare, FiCircle, FiHexagon,
   FiDownload, FiTrash2, FiCopy, FiBold, FiItalic,
-  FiAlignLeft, FiAlignCenter, FiAlignRight, FiArrowLeft
+  FiAlignLeft, FiAlignCenter, FiAlignRight
 } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
 import CanvasImage from '../Canvas/CanvasImage';
 import CanvasText from '../Canvas/CanvasText';
-import CanvasShape from '../Canvas/CanvasShape';
-import Toolbar from '../Canvas/Toolbar';
-import PropertyPanel from '../Canvas/PropertyPanel';
+import CanvasShape from './CanvasShape';
+import Toolbar from './Toolbar';
+import PropertyPanel from './PropertyPanel';
 
 const AdEditor = () => {
   const [elements, setElements] = useState([]);
@@ -157,35 +156,8 @@ const AdEditor = () => {
   const selectedElement = elements.find(elem => elem.id === selectedId);
 
   return (
-    <div className="ml-64 min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/templates">
-              <motion.button
-                whileHover={{ x: -5 }}
-                className="flex items-center text-gray-600 hover:text-indigo-600"
-              >
-                <FiArrowLeft className="mr-2" />
-                Back to Templates
-              </motion.button>
-            </Link>
-            <h1 className="text-2xl font-bold ml-8">Ad Editor</h1>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={downloadCanvas}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            <FiDownload className="mr-2" />
-            Download
-          </motion.button>
-        </div>
-      </div>
-
-      <div className="flex">
+    <div className="flex min-h-screen bg-gray-100">
+      <div className="flex flex-1">
         {/* Left Toolbar */}
         <Toolbar
           onAddImage={() => document.getElementById('imageUpload').click()}
