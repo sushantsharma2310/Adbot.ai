@@ -156,9 +156,9 @@ const AdEditor = () => {
   const selectedElement = elements.find(elem => elem.id === selectedId);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <div className="flex flex-1">
-        {/* Left Toolbar */}
+    <div className="flex h-screen bg-gray-100 ml-[275px]">
+      {/* Left Toolbar */}
+      <div className="w-16 bg-white border-r border-gray-200">
         <Toolbar
           onAddImage={() => document.getElementById('imageUpload').click()}
           onAddText={addText}
@@ -168,76 +168,76 @@ const AdEditor = () => {
           canUndo={historyStep > 0}
           canRedo={historyStep < history.length - 1}
         />
+      </div>
 
-        <input
-          type="file"
-          id="imageUpload"
-          className="hidden"
-          accept="image/*"
-          onChange={handleImageUpload}
-        />
+      <input
+        type="file"
+        id="imageUpload"
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
 
-        {/* Canvas Area */}
-        <div className="flex-1 p-8">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <Stage
-              width={800}
-              height={600}
-              ref={stageRef}
-              onClick={(e) => {
-                if (e.target === e.target.getStage()) {
-                  setSelectedId(null);
-                }
-              }}
-            >
-              <Layer>
-                {elements.map((elem) => {
-                  if (elem.type === 'image') {
-                    return (
-                      <CanvasImage
-                        key={elem.id}
-                        imageProps={elem}
-                        isSelected={elem.id === selectedId}
-                        onSelect={() => setSelectedId(elem.id)}
-                        onChange={(newProps) => handleElementChange(elem.id, newProps)}
-                      />
-                    );
-                  }
-                  if (elem.type === 'text') {
-                    return (
-                      <CanvasText
-                        key={elem.id}
-                        textProps={elem}
-                        isSelected={elem.id === selectedId}
-                        onSelect={() => setSelectedId(elem.id)}
-                        onChange={(newProps) => handleElementChange(elem.id, newProps)}
-                      />
-                    );
-                  }
+      {/* Canvas Area */}
+      <div className="flex-1 p-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <Stage
+            width={800}
+            height={600}
+            ref={stageRef}
+            onClick={(e) => {
+              if (e.target === e.target.getStage()) {
+                setSelectedId(null);
+              }
+            }}
+          >
+            <Layer>
+              {elements.map((elem) => {
+                if (elem.type === 'image') {
                   return (
-                    <CanvasShape
+                    <CanvasImage
                       key={elem.id}
-                      shapeProps={elem}
+                      imageProps={elem}
                       isSelected={elem.id === selectedId}
                       onSelect={() => setSelectedId(elem.id)}
                       onChange={(newProps) => handleElementChange(elem.id, newProps)}
                     />
                   );
-                })}
-              </Layer>
-            </Stage>
-          </div>
+                }
+                if (elem.type === 'text') {
+                  return (
+                    <CanvasText
+                      key={elem.id}
+                      textProps={elem}
+                      isSelected={elem.id === selectedId}
+                      onSelect={() => setSelectedId(elem.id)}
+                      onChange={(newProps) => handleElementChange(elem.id, newProps)}
+                    />
+                  );
+                }
+                return (
+                  <CanvasShape
+                    key={elem.id}
+                    shapeProps={elem}
+                    isSelected={elem.id === selectedId}
+                    onSelect={() => setSelectedId(elem.id)}
+                    onChange={(newProps) => handleElementChange(elem.id, newProps)}
+                  />
+                );
+              })}
+            </Layer>
+          </Stage>
         </div>
-
-        {/* Right Property Panel */}
-        <PropertyPanel
-          selectedElement={selectedElement}
-          onChange={(newProps) => handleElementChange(selectedId, newProps)}
-          onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
-          onDownload={downloadCanvas}
-        />
       </div>
+
+      {/* Right Property Panel */}
+      <PropertyPanel
+        selectedElement={selectedElement}
+        onChange={(newProps) => handleElementChange(selectedId, newProps)}
+        onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onDownload={downloadCanvas}
+      />
     </div>
   );
 };
