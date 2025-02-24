@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
 import { Stage, Layer } from 'react-konva';
 import { motion } from 'framer-motion';
-import { 
+import {
   FiImage, FiType, FiSquare, FiCircle, FiHexagon,
   FiDownload, FiTrash2, FiCopy, FiBold, FiItalic,
   FiAlignLeft, FiAlignCenter, FiAlignRight
 } from 'react-icons/fi';
-import CanvasImage from './CanvasImage';
-import CanvasText from './CanvasText';
-import CanvasShape from './CanvasShape';
-import Toolbar from './Toolbar';
-import PropertyPanel from './PropertyPanel';
+import CanvasImage from '../Canvas/CanvasImage';
+import CanvasText from '../Canvas/CanvasText';
+import CanvasShape from '../Canvas/CanvasShape';
+import Toolbar from '../Canvas/Toolbar';
+import PropertyPanel from '../Canvas/PropertyPanel';
 
 const AdEditor = () => {
   const [elements, setElements] = useState([]);
@@ -157,7 +157,6 @@ const AdEditor = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Left Toolbar */}
       <Toolbar
         onAddImage={() => document.getElementById('imageUpload').click()}
         onAddText={addText}
@@ -168,7 +167,6 @@ const AdEditor = () => {
         canRedo={historyStep < history.length - 1}
       />
 
-      {/* Hidden file input */}
       <input
         type="file"
         id="imageUpload"
@@ -177,7 +175,6 @@ const AdEditor = () => {
         onChange={handleImageUpload}
       />
 
-      {/* Main Canvas Area */}
       <div className="flex-1 p-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <Stage
@@ -229,7 +226,6 @@ const AdEditor = () => {
         </div>
       </div>
 
-      {/* Right Property Panel */}
       <PropertyPanel
         selectedElement={selectedElement}
         onChange={(newProps) => handleElementChange(selectedId, newProps)}

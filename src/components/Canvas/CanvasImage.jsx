@@ -33,7 +33,6 @@ const CanvasImage = ({ imageProps, isSelected, onSelect, onChange }) => {
           const node = imageRef.current;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
-
           node.scaleX(1);
           node.scaleY(1);
           onChange({
