@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -18,6 +18,53 @@ import OnboardingPage from './components/Auth/Onboarding';
 import GetStartedPage from './components/GetStarted/GetStartedPage';
 import './App.css';
 
+// Layout component that conditionally renders the Sidebar
+const AppLayout = ({ isAuthenticated }) => {
+  const location = useLocation();
+  
+  // Function to check if current route is public
+  const isPublicRoute = (pathname) => {
+    return ['/', '/signin', '/signup'].includes(pathname);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {isAuthenticated && !isPublicRoute(location.pathname) && <Sidebar />}
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route 
+          path="/signin" 
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} 
+        />
+        <Route 
+          path="/signup" 
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} 
+        />
+        {/* Protected Routes */}
+        {isAuthenticated ? (
+          <>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/get-started" element={<GetStartedPage />} />
+            <Route path="/create" element={<AdCreator />} />
+            <Route path="/templates" element={<TemplateSelection />} />
+            <Route path="/editor/:templateId" element={<AdEditor />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/subscription/confirmation" element={<SubscriptionConfirmation />} />
+            <Route path="/billing" element={<BillingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/help" element={<HelpPage />} />
+          </>
+        ) : (
+          <Route path="*" element={<Navigate to="/" replace />} />
+        )}
+      </Routes>
+    </div>
+  );
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,48 +79,9 @@ function App() {
     return null;
   }
 
-  // Function to check if current route is public
-  const isPublicRoute = (pathname) => {
-    return ['/', '/signin', '/signup'].includes(pathname);
-  };
-
   return (
     <HashRouter>
-      <div className="min-h-screen bg-gray-50">
-        {isAuthenticated && !isPublicRoute(window.location.hash.slice(1)) && <Sidebar />}
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route 
-            path="/signin" 
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} 
-          />
-          <Route 
-            path="/signup" 
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} 
-          />
-
-          {/* Protected Routes */}
-          {isAuthenticated ? (
-            <>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/onboarding" element={<OnboardingPage />} />
-              <Route path="/get-started" element={<GetStartedPage />} />
-              <Route path="/create" element={<AdCreator />} />
-              <Route path="/templates" element={<TemplateSelection />} />
-              <Route path="/editor/:templateId" element={<AdEditor />} />
-              <Route path="/subscription" element={<SubscriptionPage />} />
-              <Route path="/payment" element={<PaymentPage />} />
-              <Route path="/subscription/confirmation" element={<SubscriptionConfirmation />} />
-              <Route path="/billing" element={<BillingPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/help" element={<HelpPage />} />
-            </>
-          ) : (
-            <Route path="*" element={<Navigate to="/" replace />} />
-          )}
-        </Routes>
-      </div>
+      <AppLayout isAuthenticated={isAuthenticated} />
     </HashRouter>
   );
 }
