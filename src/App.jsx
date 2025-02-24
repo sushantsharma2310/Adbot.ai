@@ -1,6 +1,5 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import AdCreator from './components/AdCreator';
@@ -21,21 +20,36 @@ import './App.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     setIsAuthenticated(!!authStatus);
+    setIsLoading(false);
   }, []);
+
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+
+  // Check if current path is public
+  const isPublicRoute = (pathname) => {
+    return ['/', '/signin', '/signup'].includes(pathname);
+  };
 
   return (
     <HashRouter>
       <div className="min-h-screen bg-gray-50">
-        {isAuthenticated && <Sidebar />}
+        {isAuthenticated && !isPublicRoute(window.location.hash.slice(1)) && <Sidebar />}
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signin" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />
+          } />
+          <Route path="/signup" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />
+          } />
 
           {/* Protected Routes */}
           {isAuthenticated ? (
@@ -54,7 +68,7 @@ function App() {
               <Route path="/help" element={<HelpPage />} />
             </>
           ) : (
-            <Route path="*" element={<Navigate to="/signin" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           )}
         </Routes>
       </div>

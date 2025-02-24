@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { FiGrid, FiLayout, FiCreditCard, FiHelpCircle, FiLogOut, FiMessageSquare, FiPlayCircle, FiPlusCircle } from 'react-icons/fi';
@@ -6,6 +6,7 @@ import LogoutModal from './LogoutModal';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const menuItems = [
@@ -19,8 +20,12 @@ const Sidebar = () => {
   ];
 
   const handleLogoutConfirm = () => {
+    // Clear all auth-related data
     localStorage.removeItem('isAuthenticated');
-    window.location.href = '#/signin';
+    localStorage.removeItem('userEmail');
+    
+    // Navigate to landing page
+    navigate('/');
   };
 
   return (
