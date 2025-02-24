@@ -29,10 +29,10 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return null; // or a loading spinner
+    return null;
   }
 
-  // Check if current path is public
+  // Function to check if current route is public
   const isPublicRoute = (pathname) => {
     return ['/', '/signin', '/signup'].includes(pathname);
   };
@@ -44,12 +44,14 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/signin" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />
-          } />
-          <Route path="/signup" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />
-          } />
+          <Route 
+            path="/signin" 
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} 
+          />
+          <Route 
+            path="/signup" 
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} 
+          />
 
           {/* Protected Routes */}
           {isAuthenticated ? (
