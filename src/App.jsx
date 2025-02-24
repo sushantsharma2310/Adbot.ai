@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import AdCreator from './components/AdCreator';
@@ -18,9 +18,13 @@ import OnboardingPage from './components/Auth/Onboarding';
 import GetStartedPage from './components/GetStarted/GetStartedPage';
 import './App.css';
 
+// Create an auth context that we can use across components
+export const AuthContext = createContext();
+
 // Layout component that conditionally renders the Sidebar
-const AppLayout = ({ isAuthenticated }) => {
+const AppLayout = () => {
   const location = useLocation();
+  const { isAuthenticated } = React.useContext(AuthContext);
   
   // Function to check if current route is public
   const isPublicRoute = (pathname) => {
@@ -70,9 +74,25 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(!!authStatus);
-    setIsLoading(false);
+    const checkAuthStatus = () => {
+      const authStatus = localStorage.getItem('isAuthenticated');
+      setIsAuthenticated(!!authStatus);
+      setIsLoading(false);
+    };
+
+    // Check auth status initially
+    checkAuthStatus();
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', checkAuthStatus);
+
+    // Create a custom event listener for auth changes
+    window.addEventListener('authChange', checkAuthStatus);
+
+    return () => {
+      window.removeEventListener('storage', checkAuthStatus);
+      window.removeEventListener('authChange', checkAuthStatus);
+    };
   }, []);
 
   if (isLoading) {
@@ -81,7 +101,9 @@ function App() {
 
   return (
     <HashRouter>
-      <AppLayout isAuthenticated={isAuthenticated} />
+      <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+        <AppLayout />
+      </AuthContext.Provider>
     </HashRouter>
   );
 }

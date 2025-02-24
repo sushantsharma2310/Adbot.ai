@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiGithub, FiTwitter } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
+import { AuthContext } from '../../App';
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +26,13 @@ const SignIn = () => {
       // Demo: Store auth state and user info
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userEmail', email);
-
+      
+      // Update the auth context directly
+      setIsAuthenticated(true);
+      
+      // Dispatch a custom event to notify other components about the auth change
+      window.dispatchEvent(new Event('authChange'));
+      
       // Navigate to dashboard
       navigate('/dashboard');
     } catch (err) {
