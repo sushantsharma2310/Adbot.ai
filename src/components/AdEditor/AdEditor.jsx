@@ -1,150 +1,242 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Draggable from 'react-draggable';
-import { HexColorPicker } from 'react-colorful';
-import { FiSave, FiDownload, FiEye, FiType, FiImage, FiGrid, FiAlignCenter, FiMove } from 'react-icons/fi';
+import { useState, useRef } from 'react';
+import { Stage, Layer } from 'react-konva';
+import { motion } from 'framer-motion';
+import { 
+  FiImage, FiType, FiSquare, FiCircle, FiHexagon,
+  FiDownload, FiTrash2, FiCopy, FiBold, FiItalic,
+  FiAlignLeft, FiAlignCenter, FiAlignRight
+} from 'react-icons/fi';
+import CanvasImage from './CanvasImage';
+import CanvasText from './CanvasText';
+import CanvasShape from './CanvasShape';
 import Toolbar from './Toolbar';
-import ColorPalette from './ColorPalette';
-import PreviewDownload from './PreviewDownload';
+import PropertyPanel from './PropertyPanel';
 
 const AdEditor = () => {
-  const navigate = useNavigate();
   const [elements, setElements] = useState([]);
-  const [selectedElement, setSelectedElement] = useState(null);
-  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [brandColors, setBrandColors] = useState({
-    primary: '#4F46E5',
-    secondary: '#818CF8',
-    accent: '#C7D2FE',
-    neutral: '#F3F4F6'
-  });
+  const [selectedId, setSelectedId] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyStep, setHistoryStep] = useState(0);
+  const stageRef = useRef(null);
 
-  const addElement = (type) => {
+  const addImage = (url) => {
     const newElement = {
       id: Date.now(),
-      type,
-      content: type === 'text' ? 'Double click to edit' : 'https://images.unsplash.com/photo-1595535873420-a599195b3f4a?w=150&h=150&fit=crop',
-      position: { x: 0, y: 0 },
-      size: { width: 150, height: type === 'text' ? 50 : 150 },
-      color: '#000000',
-      fontSize: 16
+      type: 'image',
+      src: url,
+      x: 100,
+      y: 100,
+      width: 200,
+      height: 200,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
     };
-    setElements([...elements, newElement]);
+    addElement(newElement);
   };
 
-  const handleDrag = (id, e, data) => {
-    setElements(elements.map(el => 
-      el.id === id ? { ...el, position: { x: data.x, y: data.y } } : el
-    ));
+  const addText = () => {
+    const newElement = {
+      id: Date.now(),
+      type: 'text',
+      text: 'Double click to edit',
+      x: 100,
+      y: 100,
+      fontSize: 20,
+      fontFamily: 'Arial',
+      fill: '#000000',
+      width: 200,
+      align: 'left',
+      fontStyle: 'normal',
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+    };
+    addElement(newElement);
   };
 
-  const handleElementClick = (element) => {
-    setSelectedElement(element);
+  const addShape = (shapeType) => {
+    const newElement = {
+      id: Date.now(),
+      type: 'shape',
+      shapeType,
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      fill: '#e3e3e3',
+      stroke: '#000000',
+      strokeWidth: 2,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+    };
+    addElement(newElement);
   };
 
-  const handleTextEdit = (id, content) => {
-    setElements(elements.map(el => 
-      el.id === id ? { ...el, content } : el
-    ));
+  const addElement = (element) => {
+    const newElements = [...elements, element];
+    setElements(newElements);
+    addToHistory(newElements);
   };
 
-  const saveDraft = () => {
-    navigate('/dashboard');
+  const handleElementChange = (id, newProps) => {
+    const newElements = elements.map((elem) =>
+      elem.id === id ? { ...elem, ...newProps } : elem
+    );
+    setElements(newElements);
+    addToHistory(newElements);
   };
+
+  const addToHistory = (newElements) => {
+    const newHistory = history.slice(0, historyStep + 1);
+    newHistory.push(newElements);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1);
+  };
+
+  const undo = () => {
+    if (historyStep > 0) {
+      setHistoryStep(historyStep - 1);
+      setElements(history[historyStep - 1]);
+    }
+  };
+
+  const redo = () => {
+    if (historyStep < history.length - 1) {
+      setHistoryStep(historyStep + 1);
+      setElements(history[historyStep + 1]);
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedId) {
+      const newElements = elements.filter(elem => elem.id !== selectedId);
+      setElements(newElements);
+      setSelectedId(null);
+      addToHistory(newElements);
+    }
+  };
+
+  const handleDuplicate = () => {
+    if (selectedId) {
+      const elementToDuplicate = elements.find(elem => elem.id === selectedId);
+      const newElement = {
+        ...elementToDuplicate,
+        id: Date.now(),
+        x: elementToDuplicate.x + 20,
+        y: elementToDuplicate.y + 20
+      };
+      const newElements = [...elements, newElement];
+      setElements(newElements);
+      setSelectedId(newElement.id);
+      addToHistory(newElements);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => addImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const downloadCanvas = () => {
+    const uri = stageRef.current.toDataURL();
+    const link = document.createElement('a');
+    link.download = 'canvas.png';
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const selectedElement = elements.find(elem => elem.id === selectedId);
 
   return (
-    <div className="ml-64 flex h-screen bg-gray-100">
-      <Toolbar onAddElement={addElement} />
+    <div className="flex h-screen bg-gray-100">
+      {/* Left Toolbar */}
+      <Toolbar
+        onAddImage={() => document.getElementById('imageUpload').click()}
+        onAddText={addText}
+        onAddShape={addShape}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={historyStep > 0}
+        canRedo={historyStep < history.length - 1}
+      />
 
+      {/* Hidden file input */}
+      <input
+        type="file"
+        id="imageUpload"
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
+
+      {/* Main Canvas Area */}
       <div className="flex-1 p-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-2xl font-bold">Ad Editor</h2>
-          <div className="flex space-x-4">
-            <button
-              onClick={saveDraft}
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg"
-            >
-              <FiSave className="mr-2" />
-              Save Draft
-            </button>
-            <button
-              onClick={() => setShowPreview(true)}
-              className="flex items-center px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg"
-            >
-              <FiEye className="mr-2" />
-              Preview
-            </button>
-          </div>
-        </div>
-
-        <div 
-          className="bg-white rounded-lg shadow-lg"
-          style={{
-            width: '600px',
-            height: '600px',
-            position: 'relative',
-            backgroundColor
-          }}
-        >
-          {elements.map(element => (
-            <Draggable
-              key={element.id}
-              position={element.position}
-              onDrag={(e, data) => handleDrag(element.id, e, data)}
-              onStop={() => handleElementClick(element)}
-            >
-              <div
-                className={`absolute cursor-move ${
-                  selectedElement?.id === element.id ? 'ring-2 ring-indigo-500' : ''
-                }`}
-                style={{
-                  width: element.size.width,
-                  height: element.size.height
-                }}
-              >
-                {element.type === 'text' ? (
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleTextEdit(element.id, e.target.textContent)}
-                    style={{
-                      color: element.color,
-                      fontSize: `${element.fontSize}px`
-                    }}
-                    className="outline-none"
-                  >
-                    {element.content}
-                  </div>
-                ) : (
-                  <img
-                    src={element.content}
-                    alt="Ad element"
-                    className="w-full h-full object-cover"
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <Stage
+            width={800}
+            height={600}
+            ref={stageRef}
+            onClick={(e) => {
+              if (e.target === e.target.getStage()) {
+                setSelectedId(null);
+              }
+            }}
+          >
+            <Layer>
+              {elements.map((elem) => {
+                if (elem.type === 'image') {
+                  return (
+                    <CanvasImage
+                      key={elem.id}
+                      imageProps={elem}
+                      isSelected={elem.id === selectedId}
+                      onSelect={() => setSelectedId(elem.id)}
+                      onChange={(newProps) => handleElementChange(elem.id, newProps)}
+                    />
+                  );
+                }
+                if (elem.type === 'text') {
+                  return (
+                    <CanvasText
+                      key={elem.id}
+                      textProps={elem}
+                      isSelected={elem.id === selectedId}
+                      onSelect={() => setSelectedId(elem.id)}
+                      onChange={(newProps) => handleElementChange(elem.id, newProps)}
+                    />
+                  );
+                }
+                return (
+                  <CanvasShape
+                    key={elem.id}
+                    shapeProps={elem}
+                    isSelected={elem.id === selectedId}
+                    onSelect={() => setSelectedId(elem.id)}
+                    onChange={(newProps) => handleElementChange(elem.id, newProps)}
                   />
-                )}
-              </div>
-            </Draggable>
-          ))}
+                );
+              })}
+            </Layer>
+          </Stage>
         </div>
       </div>
 
-      <div className="w-64 bg-white border-l border-gray-200 p-4">
-        <ColorPalette
-          brandColors={brandColors}
-          setBrandColors={setBrandColors}
-          backgroundColor={backgroundColor}
-          setBackgroundColor={setBackgroundColor}
-        />
-      </div>
-
-      {showPreview && (
-        <PreviewDownload
-          adContent={elements}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
+      {/* Right Property Panel */}
+      <PropertyPanel
+        selectedElement={selectedElement}
+        onChange={(newProps) => handleElementChange(selectedId, newProps)}
+        onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onDownload={downloadCanvas}
+      />
     </div>
   );
 };
